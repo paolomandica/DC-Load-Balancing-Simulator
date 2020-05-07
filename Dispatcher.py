@@ -10,7 +10,6 @@ class Dispatcher:
     y = 100
     t_0 = 1
     alpha = 2.1
-    theta = 0
 
     def __init__(self, number_of_tasks: int,
                  number_of_servers: int,
@@ -22,6 +21,8 @@ class Dispatcher:
         self.d = d
         self.tasks_timeline = []
         self.system_times = []
+        self.delays = []
+        self.theta = 0
 
     def get_tasks_timeline(self):
         return self.tasks_timeline
@@ -80,6 +81,9 @@ class Dispatcher:
 
         self.system_times.append(task_finish_time - time)
 
+        delay = server_time - task
+        self.delays.append(delay)
+
     def execute_simulation(self):
         print()
         print("Starting simulation for rho = " + str(self.rho))
@@ -91,13 +95,12 @@ class Dispatcher:
             server_id = self.pick_best_server()
             self.assign_task(time, server_id)
 
-        exp_system_time = sum(self.system_times)/self.number_of_tasks
-
-        print("Number of tasks = ", self.number_of_tasks)
-        print("Number of sys times registerd = ", len(self.system_times))
+        mean_system_time = sum(self.system_times)/self.number_of_tasks
+        mean_system_delay = sum(self.delays)/self.number_of_tasks
 
         print("Completed!")
-        print("The system time expectation is:", round(exp_system_time, 2))
+        print("The mean system time is:", round(mean_system_time, 2))
+        print("The mean system delay is:", round(mean_system_delay, 2))
         print()
 
-        return exp_system_time
+        return mean_system_time, mean_system_delay
