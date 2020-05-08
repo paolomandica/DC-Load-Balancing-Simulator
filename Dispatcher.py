@@ -1,10 +1,11 @@
 import random
 import math
+import simulation_utils as su
 
 
 class Dispatcher:
 
-    random.seed(1234)
+    # random.seed(1234)
 
     q = 1/25
     y = 100
@@ -22,7 +23,9 @@ class Dispatcher:
         self.tasks_timeline = []
         self.system_times = []
         self.delays = []
-        self.theta = 0
+        self.theta = self.compute_theta(self.rho)
+        self.interval_times = []
+        self.process_times = []
 
     def get_tasks_timeline(self):
         return self.tasks_timeline
@@ -37,17 +40,20 @@ class Dispatcher:
         exp_t = self.t_0 + (1 - self.q)*self.y
         theta = (self.number_of_servers * rho *
                  (self.alpha-1) * exp_t) / self.alpha
-        self.theta = theta
+        return theta
 
     def generate_tasks_timeline(self, number_of_tasks: int):
         prev = 0
         for _ in range(number_of_tasks):
             r1 = random.uniform(0, 1)
             if r1 <= self.q:
+                self.interval_times.append(self.t_0)
                 prev += self.t_0
             else:
                 r2 = random.uniform(0, 1)
-                prev += self.t_0 - self.y * math.log(r2)
+                task = self.t_0 - self.y * math.log(r2)
+                self.interval_times.append(task)
+                prev += task
             self.tasks_timeline.append(prev)
 
     def pick_random_servers(self):
@@ -71,6 +77,7 @@ class Dispatcher:
     def assign_task(self, time, server_id):
         r3 = random.uniform(0, 1)
         task = self.theta/(r3**(1/self.alpha))
+        self.process_times.append(task)
         server_time = self.servers[server_id]
 
         if server_time > time:
@@ -79,7 +86,7 @@ class Dispatcher:
             task_finish_time = server_time + time + task
         self.servers[server_id] = task_finish_time
 
-        self.system_times.append(task_finish_time - time)
+        # self.system_times.append(task_finish_time - time)
 
         delay = server_time - task
         self.delays.append(delay)
@@ -89,18 +96,28 @@ class Dispatcher:
         print("Starting simulation for rho = " + str(self.rho))
 
         self.generate_tasks_timeline(self.number_of_tasks)
-        self.compute_theta(self.rho)
 
         for time in self.tasks_timeline:
             server_id = self.pick_best_server()
             self.assign_task(time, server_id)
 
-        mean_system_time = sum(self.system_times)/self.number_of_tasks
+        # mean_system_time = sum(self.system_times)/self.number_of_tasks
         mean_system_delay = sum(self.delays)/self.number_of_tasks
 
         print("Completed!")
-        print("The mean system time is:", round(mean_system_time, 2))
-        print("The mean system delay is:", round(mean_system_delay, 2))
+        process_time_exp = su.compute_process_time_exp(self.theta, self.alpha)
+        interval_time_exp = su.compute_interval_time_exp(
+            self.t_0, self.q, self.y)
+
+        mean_process_time = sum(self.process_times)/len(self.process_times)
+        mean_interval_time = sum(self.interval_times)/len(self.interval_times)
+
+        print("E[X] =", process_time_exp)
+        print("Mean process time =", mean_process_time)
+        print("E[T] =", interval_time_exp)
+        print("Mean interval time =", mean_interval_time)
+
+        print("\nThe mean system delay is:", round(mean_system_delay, 2))
         print()
 
-        return mean_system_time, mean_system_delay
+        return mean_system_delay
