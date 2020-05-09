@@ -94,6 +94,8 @@ class Dispatcher:
     def execute_simulation(self):
         print()
         print("Starting simulation for rho = " + str(self.rho))
+        print("Theta =", self.theta)
+        print()
 
         self.generate_tasks_timeline(self.number_of_tasks)
 
