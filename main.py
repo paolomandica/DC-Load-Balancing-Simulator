@@ -6,7 +6,7 @@ from time import time
 from simulation_utils import Simulator, plot
 
 
-number_of_tasks = (10**6)
+number_of_tasks = (10**5)
 number_of_servers = 20
 d = 3
 rho_values = np.arange(0.8, 1., 0.01)
@@ -24,6 +24,10 @@ if __name__ == "__main__":
     print("\nStarting simulation process...")
     start = time()
 
+    simulator = Simulator(number_of_tasks, number_of_servers, d)
+    mean_system_delays_jsq, overheads_jsq = simulator.multiprocessing_simulation(
+        rho_values, n_proc)
+
     # if multiple_sim:
     #     for i in range(n_sim):
     #         mean_system_delays_part = simulator.multiprocessing_simulation(
@@ -32,14 +36,21 @@ if __name__ == "__main__":
     #     mean_system_delays = [
     #         sum(x)/n_sim for x in zip(*mean_system_delays_lists)]
 
+    # Pod-d simulation
     simulator = Simulator(number_of_tasks, number_of_servers, d)
     mean_system_delays_pod, overheads_pod = simulator.multiprocessing_simulation(
         rho_values, n_proc)
 
+    # JSQ simulation
     simulator = Simulator(
         number_of_tasks, number_of_servers, number_of_servers)
     mean_system_delays_jsq, overheads_jsq = simulator.multiprocessing_simulation(
         rho_values, n_proc)
+
+    # JBT-d simulation
+    simulator = Simulator(number_of_tasks, number_of_servers, d)
+    mean_system_delays_jbt, overheads_jbt = simulator.multiprocessing_simulation(
+        rho_values, n_proc, jbt=True)
 
     end = time()
     print("Simulation completed in", int(end-start), "seconds!\n\n")
@@ -47,7 +58,8 @@ if __name__ == "__main__":
     data = {
         "Rho": rho_values,
         "Pod": mean_system_delays_pod,
-        "JSQ": mean_system_delays_jsq
+        "JSQ": mean_system_delays_jsq,
+        "JBT-d": mean_system_delays_jbt
     }
     df = pd.DataFrame.from_dict(data)
     ylabel = "Mean System Delay"
@@ -59,7 +71,8 @@ if __name__ == "__main__":
     data = {
         "Rho": rho_values,
         "Pod": overheads_pod,
-        "JSQ": overheads_jsq
+        "JSQ": overheads_jsq,
+        "JBT-d": overheads_jbt
     }
     df = pd.DataFrame.from_dict(data)
     ylabel = "System Message Overhead"

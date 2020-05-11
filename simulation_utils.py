@@ -2,10 +2,11 @@ from Dispatcher import Dispatcher
 import multiprocessing as mp
 import matplotlib.pyplot as plt
 import seaborn as sns
+import math
 
 
 def compute_process_time_exp(beta, alpha):
-    return beta*2
+    return beta*math.factorial(1/alpha)
 
 
 def compute_interval_time_exp(t_0, q, y):
@@ -39,16 +40,20 @@ class Simulator:
         mean_sys_delay = dispatcher.execute_simulation()
         return mean_sys_delay
 
-    def simulate_partial(self, rho, i, output: list, overheads: list):
+    def simulate_partial(self, rho, i, output: list, overheads: list, jbt=False):
         dispatcher = Dispatcher(self.number_of_tasks,
                                 self.number_of_servers,
                                 rho, self.d)
-        mean_sys_delay = dispatcher.execute_simulation()
-        overhead = dispatcher.compute_overhead()
+        if jbt:
+            mean_sys_delay = dispatcher.execute_simulation_jbt()
+            overhead = 0
+        else:
+            mean_sys_delay = dispatcher.execute_simulation()
+            overhead = dispatcher.compute_overhead()
         output.append((i, mean_sys_delay))
         overheads.append((i, overhead))
 
-    def multiprocessing_simulation(self, rho_values, n_proc):
+    def multiprocessing_simulation(self, rho_values, n_proc, jbt=False):
         processes = []
         # initialize the Manager for results and shared variables
         manager = mp.Manager()
@@ -58,7 +63,7 @@ class Simulator:
         # initialize processes
         for i in range(len(rho_values)):
             p = mp.Process(target=self.simulate_partial,
-                           args=[rho_values[i], i, output, overheads])
+                           args=[rho_values[i], i, output, overheads, jbt])
             processes.append(p)
 
         # start processes
