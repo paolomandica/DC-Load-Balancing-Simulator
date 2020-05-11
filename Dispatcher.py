@@ -83,14 +83,14 @@ class Dispatcher:
         server_time = self.servers[server_id]
 
         if server_time > time:
-            task_finish_time = server_time + time
+            task_finish_time = server_time + task
         else:
-            task_finish_time = server_time + time + task
+            task_finish_time = time + task
         self.servers[server_id] = task_finish_time
 
         # self.system_times.append(task_finish_time - time)
 
-        delay = server_time - task
+        delay = server_time - task - time
         self.delays.append(delay)
 
     def execute_simulation(self):
