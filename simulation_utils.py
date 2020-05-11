@@ -12,28 +12,15 @@ def compute_interval_time_exp(t_0, q, y):
     return t_0 + (1-q)*y
 
 
-def plot2(x, y1, y2, d, title, xlabel, ylabel, path):
-    plt.plot(x, y1, label=('Pod-' + str(d)))
-    plt.scatter(x, y1, c='r')
-    plt.plot(x, y2, label='JSQ')
-    plt.scatter(x, y2, c='r')
-    plt.xticks(x)
-    plt.title(title)
-    plt.xlabel(xlabel)
-    plt.ylabel(xlabel)
-    plt.legend()
-    plt.savefig(path)
-    plt.show()
-
-
 def plot(df, d, title, xlabel, ylabel, path):
     plt.figure(figsize=(16, 9))
     sns.set(style='darkgrid',)
     sns.lineplot(x='Rho', y=ylabel, data=df,
                  hue='Policy', style='Policy',
                  markers=True, dashes=False)
-    plt.title(title)
-    plt.xlabel(xlabel)
+    plt.title(title, fontsize=20)
+    plt.xlabel(xlabel, fontsize=15)
+    plt.ylabel(ylabel, fontsize=15)
     plt.savefig(path)
     plt.show()
 
