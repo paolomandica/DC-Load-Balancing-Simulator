@@ -93,10 +93,12 @@ class Dispatcher:
         delay = task_finish_time - task - time
         self.delays.append(delay)
 
+    def compute_overhead(self):
+        return 2*self.d
+
     def execute_simulation(self):
         print()
         print("Starting simulation for rho = " + str(self.rho))
-        print("Beta =", self.beta)
         print()
 
         self.generate_tasks_timeline(self.number_of_tasks)
@@ -108,7 +110,7 @@ class Dispatcher:
         # mean_system_time = sum(self.system_times)/self.number_of_tasks
         mean_system_delay = sum(self.delays)/self.number_of_tasks
 
-        print("Completed!")
+        print("Completed! rho = " + str(self.rho))
         process_time_exp = su.compute_process_time_exp(self.beta, self.alpha)
         interval_time_exp = su.compute_interval_time_exp(
             self.t_0, self.q, self.y)
@@ -116,12 +118,12 @@ class Dispatcher:
         mean_process_time = sum(self.process_times)/len(self.process_times)
         mean_interval_time = sum(self.interval_times)/len(self.interval_times)
 
+        print("Beta =", self.beta)
         print("E[X] =", process_time_exp)
         print("Mean process time =", mean_process_time)
         print("E[T] =", interval_time_exp)
         print("Mean interval time =", mean_interval_time)
-
-        print("\nThe mean system delay is:", mean_system_delay)
+        print("The mean system delay is:", mean_system_delay)
         print()
 
         return mean_system_delay
