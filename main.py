@@ -5,7 +5,7 @@ import multiprocessing as mp
 from time import time
 
 
-number_of_tasks = (10**5)
+number_of_tasks = (10**6)
 number_of_servers = 20
 d = 3
 rho_values = np.arange(0.8, 1., 0.01)
@@ -89,4 +89,6 @@ if __name__ == "__main__":
     plt.title("Mean System Delay Variation")
     plt.xlabel("Utilization Coefficient (Rho)")
     plt.ylabel("Mean System Delay")
+    path = './plots/weibull_' + str(number_of_tasks) + '.png'
+    plt.savefig(path)
     plt.show()
