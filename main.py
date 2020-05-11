@@ -5,7 +5,7 @@ import multiprocessing as mp
 from time import time
 
 
-number_of_tasks = (10**6)
+number_of_tasks = (10**4)
 number_of_servers = 20
 d = 3
 rho_values = np.arange(0.8, 1., 0.01)
@@ -57,16 +57,23 @@ if __name__ == "__main__":
 
     mean_system_times = []
     mean_system_delays = []
+    mean_system_delays_lists = []
 
     print("\nStarting simulation process...")
     start = time()
 
     n_proc = mp.cpu_count()//2
     # n_proc = 1
-    mean_system_delays = multiprocessing_simulation(rho_values, n_proc)
+    # n_sim = 10
+    # for i in range(n_sim):
+    #     mean_system_delays_part = multiprocessing_simulation(
+    #         rho_values, n_proc)
+    #     mean_system_delays_lists.append(mean_system_delays_part)
 
-    # for rho in rho_values:
-    #     mean_system_delays.append(simulate(rho))
+    # mean_system_delays = [sum(x)/n_sim for x in zip(*mean_system_delays_lists)]
+
+    mean_system_delays = multiprocessing_simulation(
+        rho_values, n_proc)
 
     print(mean_system_delays)
 
