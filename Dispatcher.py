@@ -90,7 +90,7 @@ class Dispatcher:
 
         # self.system_times.append(task_finish_time - time)
 
-        delay = server_time - task - time
+        delay = task_finish_time - task - time
         self.delays.append(delay)
 
     def execute_simulation(self):
