@@ -134,12 +134,14 @@ class Dispatcher:
         print("Starting simulation for rho = " + str(self.rho))
         print()
 
+        overhead = 0
         self.generate_tasks_timeline(self.number_of_tasks)
 
         remaining_tasks = len(self.tasks_timeline)
         time = 0
         threshold = float("+inf")
         while(remaining_tasks > 0):
+            overhead_temp = 0
 
             servers_below_threshold = []
             for id, queue_len in self.servers.items():
@@ -161,6 +163,7 @@ class Dispatcher:
                 n_servers = min(self.d, len(servers_below_threshold))
                 server_id = self.pick_best_server(
                     servers_below_threshold, n_servers)
+                overhead_temp += 2*n_servers
             else:
                 server_id = random.sample(list(self.servers.keys()), 1)[0]
 
@@ -168,8 +171,12 @@ class Dispatcher:
             for i in range(tasks_cnt):
                 self.assign_task(time, server_id)
             remaining_tasks -= tasks_cnt
+            overhead_temp += self.number_of_servers
+
+            overhead += tasks_cnt + overhead_temp/self.t
 
         mean_system_delay = sum(self.delays)/self.number_of_tasks
+        mean_overhead = overhead/self.number_of_tasks
 
         print("Completed! rho = " + str(self.rho))
         process_time_exp = su.compute_process_time_exp(self.beta, self.alpha)
@@ -187,4 +194,4 @@ class Dispatcher:
         print("The mean system delay is:", mean_system_delay)
         print()
 
-        return mean_system_delay
+        return mean_system_delay, mean_overhead
