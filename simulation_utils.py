@@ -1,5 +1,5 @@
-def compute_process_time_exp(theta, alpha):
-    return (theta*alpha)/(alpha-1)
+def compute_process_time_exp(beta, alpha):
+    return beta*2
 
 
 def compute_interval_time_exp(t_0, q, y):

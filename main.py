@@ -5,8 +5,8 @@ import multiprocessing as mp
 from time import time
 
 
-number_of_tasks = (10**4)
-number_of_servers = 100
+number_of_tasks = (10**6)
+number_of_servers = 20
 d = 3
 rho_values = np.arange(0.8, 1., 0.01)
 
