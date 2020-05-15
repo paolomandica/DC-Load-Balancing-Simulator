@@ -6,13 +6,13 @@ from time import time
 from simulation_utils import Simulator, plot
 
 
-number_of_tasks = (10**5)
+number_of_tasks = (10**4)
 number_of_servers = 20
 d = 3
 rho_values = np.arange(0.8, 1., 0.01)
 multiple_sim = False
 n_sim = 5
-n_proc = mp.cpu_count()//1.5
+n_proc = mp.cpu_count()
 
 
 if __name__ == "__main__":
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     ylabel = "Mean System Delay"
     df = df.melt('Rho', var_name='Policy',  value_name=ylabel)
     path = './plots/weibull_' + str(number_of_tasks) + '.png'
-    plot(df, d, "Mean System Delay Variation",
+    plot(df, d, "Mean System Time Variation",
          "Utilization Coefficient (Rho)", ylabel, path)
 
     data = {

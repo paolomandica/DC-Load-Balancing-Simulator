@@ -8,8 +8,8 @@ class Dispatcher:
 
     # random.seed(1234)
 
-    q = 24/25
-    y = 100
+    q = 3/5
+    y = 10
     t_0 = 1
     alpha = 0.5
     t = 1000*t_0
@@ -24,7 +24,6 @@ class Dispatcher:
         self.d = d
         self.tasks_timeline = []
         self.system_times = []
-        self.delays = []
         self.beta = self.compute_beta(self.rho)
         self.interval_times = []
         self.process_times = []
@@ -90,8 +89,8 @@ class Dispatcher:
             task_finish_time = time + task
         self.servers[server_id] = task_finish_time
 
-        delay = task_finish_time - time
-        self.delays.append(delay)
+        system_time = task_finish_time - time
+        self.system_times.append(system_time)
 
     def compute_overhead(self):
         return 2*self.d
@@ -108,8 +107,7 @@ class Dispatcher:
                 list(self.servers.keys()), self.d)
             self.assign_task(time, server_id)
 
-        # mean_system_time = sum(self.system_times)/self.number_of_tasks
-        mean_system_delay = sum(self.delays)/self.number_of_tasks
+        mean_system_time = sum(self.system_times)/self.number_of_tasks
 
         print("Completed! rho = " + str(self.rho))
         process_time_exp = su.compute_process_time_exp(self.beta, self.alpha)
@@ -124,10 +122,10 @@ class Dispatcher:
         print("Mean process time =", mean_process_time)
         print("E[T] =", interval_time_exp)
         print("Mean interval time =", mean_interval_time)
-        print("The mean system delay is:", mean_system_delay)
+        print("The mean system time is:", mean_system_time)
         print()
 
-        return mean_system_delay
+        return mean_system_time
 
     def execute_simulation_jbt(self):
         print()
@@ -175,7 +173,7 @@ class Dispatcher:
 
             overhead += tasks_cnt + overhead_temp/self.t
 
-        mean_system_delay = sum(self.delays)/self.number_of_tasks
+        mean_system_time = sum(self.system_times)/self.number_of_tasks
         mean_overhead = overhead/self.number_of_tasks
 
         print("Completed! rho = " + str(self.rho))
@@ -191,7 +189,7 @@ class Dispatcher:
         print("Mean process time =", mean_process_time)
         print("E[T] =", interval_time_exp)
         print("Mean interval time =", mean_interval_time)
-        print("The mean system delay is:", mean_system_delay)
+        print("The mean system delay is:", mean_system_time)
         print()
 
-        return mean_system_delay, mean_overhead
+        return mean_system_time, mean_overhead
