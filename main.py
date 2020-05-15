@@ -70,6 +70,18 @@ if __name__ == "__main__":
 
     data = {
         "Rho": rho_values,
+        "Pod": mean_system_delays_pod,
+        "JSQ": mean_system_delays_jsq
+    }
+    df = pd.DataFrame.from_dict(data)
+    ylabel = "Mean System Delay"
+    df = df.melt('Rho', var_name='Policy',  value_name=ylabel)
+    path = './plots/weibull_partial_' + str(number_of_tasks) + '.png'
+    plot(df, d, "Mean System Time Variation",
+         "Utilization Coefficient (Rho)", ylabel, path)
+
+    data = {
+        "Rho": rho_values,
         "Pod": overheads_pod,
         "JSQ": overheads_jsq,
         "JBT-d": overheads_jbt
