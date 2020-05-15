@@ -94,56 +94,6 @@ class Dispatcher:
         system_time = task_finish_time - time
         self.system_times.append(system_time)
 
-    def process_tasks_jbt1(self):
-        remaining_tasks = len(self.tasks_timeline)
-        time = 0
-        threshold = float("+inf")
-        while(remaining_tasks > 0):
-            overhead_temp = 0
-
-            # obtain servers with queue length below threshold
-            servers_below_threshold = []
-            for id, queue_len in self.servers.items():
-                if queue_len < threshold:
-                    servers_below_threshold.append(id)
-
-            # start iterating
-            time += self.t
-            tasks_cnt = 0   # number of tasks in the time interval
-            index = -1      # index of the last task to process
-            for i in range(index+1, self.number_of_tasks):
-                # select all tasks from the last interval
-                x = self.tasks_timeline[i]
-                if x <= time:
-                    tasks_cnt += 1
-                    index = i
-                else:
-                    break
-
-            # if there are servers available, sample one of them to process
-            # all the tasks, else sample a random one from all the servers in the system
-            if len(servers_below_threshold) > 0:
-                n_servers = min(self.d, len(servers_below_threshold))
-                server_id = self.pick_best_server(
-                    servers_below_threshold, n_servers)
-                overhead_temp += 2*n_servers    # initialize the temp overhead
-            else:
-                server_id = random.sample(list(self.servers.keys()), 1)[0]
-
-            # update the threshold with the choosen server's one
-            threshold = self.servers[server_id]
-            # assing all the tasks to the choosen server
-            for i in range(tasks_cnt):
-                self.assign_task(time, server_id)
-            # update the total number of remaing tasks
-            remaining_tasks -= tasks_cnt
-            # increate the temp overhead
-            overhead_temp += self.number_of_servers
-
-            # update the total system overhead
-            self.overhead += tasks_cnt + overhead_temp/self.t
-        self.overhead /= self.number_of_tasks
-
     def process_tasks_jbt(self):
         t_units = 0
         threshold = float("+inf")
