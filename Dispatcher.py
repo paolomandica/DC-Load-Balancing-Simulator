@@ -94,7 +94,7 @@ class Dispatcher:
         system_time = task_finish_time - time
         self.system_times.append(system_time)
 
-    def process_tasks_jbt(self):
+    def process_tasks_jbt1(self):
         remaining_tasks = len(self.tasks_timeline)
         time = 0
         threshold = float("+inf")
@@ -144,6 +144,46 @@ class Dispatcher:
             self.overhead += tasks_cnt + overhead_temp/self.t
         self.overhead /= self.number_of_tasks
 
+    def process_tasks_jbt(self):
+        t_units = 0
+        threshold = float("+inf")
+
+        for time in self.tasks_timeline:
+            overhead_temp = 0
+            # if t units of time passed, update the threshold,
+            # update the list of servers below threshold
+            # and use the server with lower threshold to assign the task
+            if time > t_units:
+                server_id = self.pick_best_server(
+                    self.servers.keys(), self.d)
+                threshold = self.servers[server_id]
+                servers_below_threshold = []
+                # search for all the servers below threshold
+                for id, queue_len in self.servers.items():
+                    if queue_len < threshold:
+                        servers_below_threshold.append(id)
+                n_servers = min(self.d, len(servers_below_threshold))
+                overhead_temp += self.number_of_servers
+                t_units += self.t
+
+            # else, choose a random server from the ones below threshold
+            # or eventually from all the servers and assign the task
+            else:
+                if len(servers_below_threshold) > 0:
+                    server_id = random.sample(servers_below_threshold, 1)[0]
+                    n_servers = min(self.d, len(servers_below_threshold))
+                    overhead_temp += 2*n_servers
+                else:
+                    server_id = random.sample(list(self.servers.keys()), 1)[0]
+
+            self.assign_task(time, server_id)
+            self.overhead += overhead_temp + 1
+            try:
+                servers_below_threshold.remove(server_id)
+            except:
+                continue
+        self.overhead /= self.number_of_tasks
+
     def compute_overhead(self):
         self.overhead = 2*self.d
 
@@ -179,7 +219,9 @@ class Dispatcher:
         else:
             self.process_tasks_jbt()
 
-        mean_system_time = sum(self.system_times)/self.number_of_tasks
+        to_remove = int(self.number_of_tasks*0.1)
+        mean_system_time = sum(
+            self.system_times[to_remove:])/(self.number_of_tasks-to_remove)
 
         process_time_exp = su.compute_process_time_exp(self.beta, self.alpha)
         interval_time_exp = su.compute_interval_time_exp(

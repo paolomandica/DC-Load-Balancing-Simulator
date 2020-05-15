@@ -6,7 +6,7 @@ from time import time
 from simulation_utils import Simulator, plot
 
 
-number_of_tasks = (10**5)
+number_of_tasks = (10**4)
 number_of_servers = 20
 d = 3
 rho_values = np.arange(0.8, 1., 0.01)
@@ -65,18 +65,6 @@ if __name__ == "__main__":
     ylabel = "Mean System Delay"
     df = df.melt('Rho', var_name='Policy',  value_name=ylabel)
     path = './plots/weibull_' + str(number_of_tasks) + '.png'
-    plot(df, d, "Mean System Time Variation",
-         "Utilization Coefficient (Rho)", ylabel, path)
-
-    data = {
-        "Rho": rho_values,
-        "Pod": mean_system_delays_pod,
-        "JSQ": mean_system_delays_jsq
-    }
-    df = pd.DataFrame.from_dict(data)
-    ylabel = "Mean System Delay"
-    df = df.melt('Rho', var_name='Policy',  value_name=ylabel)
-    path = './plots/weibull_partial_' + str(number_of_tasks) + '.png'
     plot(df, d, "Mean System Time Variation",
          "Utilization Coefficient (Rho)", ylabel, path)
 
