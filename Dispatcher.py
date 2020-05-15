@@ -150,15 +150,17 @@ class Dispatcher:
     def print_results(self, process_time_exp, mean_process_time,
                       interval_time_exp, mean_interval_time,
                       empirical_rho, mean_system_time):
-        print("Beta =", self.beta)
-        print("E[X] =", process_time_exp, " --> ",
-              "Mean process time =", mean_process_time)
-        print("E[T] =", interval_time_exp, " --> ",
-              "Mean interval time =", mean_interval_time)
-        print("Rho =", self.rho, " --> ",
-              "Empirical Rho =", empirical_rho)
-        print("Mean system time =", mean_system_time)
-        print()
+        message = "\nCompleted! rho = " + str(round(self.rho, 2)) + "\n" + \
+            "Beta = " + str(self.beta) + "\n" + \
+            "E[X] = " + str(round(process_time_exp, 2)) + " --> " + \
+            "Mean process time = " + str(round(mean_process_time, 4)) + "\n" + \
+            "E[T] = " + str(round(interval_time_exp, 2)) + " --> " + \
+            "Mean interval time = " + str(round(mean_interval_time, 4)) + "\n" + \
+            "Rho = " + str(round(self.rho, 2)) + " --> " + \
+            "Empirical Rho = " + str(round(empirical_rho, 4)) + "\n" + \
+            "Mean system time = " + str(round(mean_system_time)) + "\n"
+
+        print(message)
 
     def execute_simulation(self):
         print()
@@ -179,14 +181,13 @@ class Dispatcher:
 
         mean_system_time = sum(self.system_times)/self.number_of_tasks
 
-        print("Completed! rho = " + str(self.rho))
         process_time_exp = su.compute_process_time_exp(self.beta, self.alpha)
         interval_time_exp = su.compute_interval_time_exp(
             self.t_0, self.q, self.y)
 
         mean_process_time = sum(self.process_times)/len(self.process_times)
         mean_interval_time = sum(self.interval_times)/len(self.interval_times)
-        empirical_rho = mean_process_time * \
+        empirical_rho = mean_process_time / \
             (self.number_of_servers*mean_interval_time)
 
         self.print_results(process_time_exp, mean_process_time,
