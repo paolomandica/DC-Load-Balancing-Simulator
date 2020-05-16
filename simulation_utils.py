@@ -13,12 +13,18 @@ def compute_interval_time_exp(t_0, q, y):
     return t_0 + (1-q)*y
 
 
-def plot(df, d, title, xlabel, ylabel, path):
+def plot(df, d, title, xlabel, ylabel, path, confidence_intervals=None):
     plt.figure(figsize=(16, 9))
     sns.set(style='darkgrid',)
     sns.lineplot(x='Rho', y=ylabel, data=df,
                  hue='Policy', style='Policy',
                  markers=True, dashes=False)
+
+    if confidence_intervals != None:
+        for (lower, upper) in confidence_intervals:
+            rho = df['Rho'].unique()
+            plt.fill_between(rho, lower, upper, alpha=0.3)
+
     plt.title(title, fontsize=20)
     plt.xlabel(xlabel, fontsize=15)
     plt.ylabel(ylabel, fontsize=15)
