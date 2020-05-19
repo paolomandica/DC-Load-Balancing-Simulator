@@ -6,7 +6,7 @@ from time import time
 from simulation_utils import Simulator, plot
 
 
-number_of_tasks = (10**4)
+number_of_tasks = (10**5)
 number_of_servers = 20
 d = 3
 rho_values = np.arange(0.8, 1., 0.01)

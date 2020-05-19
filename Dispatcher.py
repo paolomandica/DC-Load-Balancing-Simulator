@@ -13,7 +13,7 @@ class Dispatcher:
     y = 10
     t_0 = 1
     alpha = 0.5
-    t = 100*t_0
+    t = 1000*t_0
 
     def __init__(self, number_of_tasks: int,
                  number_of_servers: int,
