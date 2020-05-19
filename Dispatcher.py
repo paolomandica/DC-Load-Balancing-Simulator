@@ -16,7 +16,8 @@ class Dispatcher:
 
     def __init__(self, number_of_tasks: int,
                  number_of_servers: int,
-                 rho: float, d: int, jbt=False):
+                 rho: float, d: int,
+                 jbt=False, custom=False):
         self.number_of_tasks = number_of_tasks
         self.number_of_servers = number_of_servers
         self.servers = {i: 0 for i in range(number_of_servers)}
@@ -29,6 +30,7 @@ class Dispatcher:
         self.process_times = []
         self.overhead = 0
         self.jbt = jbt
+        self.custom = custom
 
     def get_tasks_timeline(self):
         return self.tasks_timeline
@@ -77,11 +79,17 @@ class Dispatcher:
 
         return best_server
 
-    def assign_task(self, time, server_id):
+    def generate_task(self):
         r3 = random.uniform(0, 1)
         # sostituire con exp x
         task = max(1, min(100*self.beta*2,
                           round(self.beta*(-math.log(r3))**(1/self.alpha))))
+        return task
+
+    def assign_task(self, time, server_id, task=None):
+        if task == None:
+            task = self.generate_task()
+
         self.process_times.append(task)
         server_time = self.servers[server_id]
 
@@ -134,6 +142,45 @@ class Dispatcher:
                 continue
         self.overhead /= self.number_of_tasks
 
+    def rotate_servers(self, s_low, s_medium, s_high):
+        s_low_q = sum(self.servers[s] for s in s_low)/len(s_low)
+        s_med_q = sum(self.servers[s] for s in s_medium)/len(s_medium)
+        s_high_q = sum(self.servers[s] for s in s_high)/len(s_high)
+        queues = [s_low_q, s_med_q, s_high_q]
+
+        min_q_index = queues.index(min(queues))
+        max_q_index = queues.index(max(queues))
+
+        return None
+
+    def process_custom(self):
+        t_units = 0
+        n_servers = int(self.number_of_servers()/3)
+        servers = self.servers.keys()
+
+        s_low = servers[:n_servers]
+        s_medium = servers[n_servers:(n_servers*2)]
+        s_high = servers[(n_servers*2):]
+
+        sl = (-math.exp(0.54)*(self.beta**self.alpha))**(1/self.alpha)
+        su = (-math.exp(0.85)*(self.beta**self.alpha))**(1/self.alpha)
+
+        for time in self.tasks_timeline:
+            # if time > t_units:
+            #     self.rotate_servers(s_low, s_medium, s_high)
+            #     t_units += self.t
+
+            task = self.generate_task()
+            if task < sl:
+                server = self.pick_best_server(s_low, len(s_low))
+            elif task >= sl and task < su:
+                server = self.pick_best_server(s_medium, len(s_medium))
+            else:
+                server = self.pick_best_server(s_high, len(s_high))
+            self.assign_task(time, server, task)
+
+        self.overhead = 0
+
     def compute_overhead(self):
         self.overhead = 2*self.d
 
@@ -159,15 +206,18 @@ class Dispatcher:
 
         self.generate_tasks_timeline(self.number_of_tasks)
 
-        if not self.jbt:
+        if self.jbt:
+            self.process_tasks_jbt()
+
+        if self.custom:
+            self.process_custom()
+
+        else:
             for time in self.tasks_timeline:
                 server_id = self.pick_best_server(
                     list(self.servers.keys()), self.d)
                 self.assign_task(time, server_id)
             self.compute_overhead()
-
-        else:
-            self.process_tasks_jbt()
 
         to_remove = int(self.number_of_tasks*0.1)
         mean_system_time = sum(

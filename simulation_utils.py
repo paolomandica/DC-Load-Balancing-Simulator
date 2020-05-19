@@ -47,7 +47,7 @@ class Simulator:
         output.append((i, mean_sys_delay))
         overheads.append((i, overhead))
 
-    def multiprocessing_simulation(self, rho_values, n_proc, jbt=False):
+    def multiprocessing_simulation(self, rho_values, n_proc, jbt=False, custom=False):
         processes = []
         # initialize the Manager for results and shared variables
         manager = mp.Manager()
@@ -57,7 +57,7 @@ class Simulator:
         # initialize processes
         for i in range(len(rho_values)):
             p = mp.Process(target=self.simulate_partial,
-                           args=[rho_values[i], i, output, overheads, jbt])
+                           args=[rho_values[i], i, output, overheads, jbt, custom])
             processes.append(p)
 
         # start processes

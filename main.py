@@ -6,11 +6,11 @@ from time import time
 from simulation_utils import Simulator, plot
 
 
-number_of_tasks = (10**6)
+number_of_tasks = (10**5)
 number_of_servers = 20
 d = 3
 rho_values = np.arange(0.8, 1., 0.01)
-multiple_sim = True
+multiple_sim = False
 n_sim = 5
 n_proc = mp.cpu_count()
 
@@ -85,7 +85,12 @@ if __name__ == "__main__":
         mean_system_times_jbt, overheads_jbt = simulator.multiprocessing_simulation(
             rho_values, n_proc, jbt=True)
 
-        filename = 'weibull_'
+        # Custom simulation
+        simulator = Simulator(number_of_tasks, number_of_servers, d)
+        mean_system_times_cst, overheads_cst = simulator.multiprocessing_simulation(
+            rho_values, n_proc, custom=True)
+
+        filename = 'weibull_test_'
 
     end = time()
     print("Simulation completed in", int(end-start), "seconds!\n\n")
@@ -112,6 +117,6 @@ if __name__ == "__main__":
     df = pd.DataFrame.from_dict(data)
     ylabel = "System Message Overhead"
     df = df.melt('Rho', var_name='Policy',  value_name=ylabel)
-    path = './plots/weibull_overhead.png'
+    path = './plots/weibull_test_overhead.png'
     plot(df, d, "Message Overhead Variation",
          "Utilization Coefficient (Rho)", ylabel, path)
