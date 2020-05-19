@@ -153,10 +153,10 @@ class Dispatcher:
 
         return None
 
-    def process_custom(self):
+    def process_custom1(self):
         t_units = 0
-        n_servers = int(self.number_of_servers()/3)
-        servers = self.servers.keys()
+        n_servers = self.number_of_servers//3
+        servers = list(self.servers.keys())
 
         s_low = servers[:n_servers]
         s_medium = servers[n_servers:(n_servers*2)]
@@ -177,6 +177,24 @@ class Dispatcher:
                 server = self.pick_best_server(s_medium, len(s_medium))
             else:
                 server = self.pick_best_server(s_high, len(s_high))
+            self.assign_task(time, server, task)
+
+        self.overhead = 0
+
+    def process_custom(self):
+        servers = list(self.servers.keys())
+
+        sl = (-math.exp(0.54)*(self.beta**self.alpha))**(1/self.alpha)
+        su = (-math.exp(0.85)*(self.beta**self.alpha))**(1/self.alpha)
+
+        for time in self.tasks_timeline:
+            task = self.generate_task()
+            if task < sl:
+                server = self.pick_best_server(servers, self.d)
+            elif task >= sl and task < su:
+                server = self.pick_best_server(servers, len(servers)//2)
+            else:
+                server = self.pick_best_server(servers, len(servers))
             self.assign_task(time, server, task)
 
         self.overhead = 0
@@ -209,7 +227,7 @@ class Dispatcher:
         if self.jbt:
             self.process_tasks_jbt()
 
-        if self.custom:
+        elif self.custom:
             self.process_custom()
 
         else:

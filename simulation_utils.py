@@ -39,10 +39,10 @@ class Simulator:
         self.number_of_tasks = number_of_tasks
         self.d = d
 
-    def simulate_partial(self, rho, i, output: list, overheads: list, jbt=False):
+    def simulate_partial(self, rho, i, output: list, overheads: list, jbt, custom):
         dispatcher = Dispatcher(self.number_of_tasks,
                                 self.number_of_servers,
-                                rho, self.d, jbt=jbt)
+                                rho, self.d, jbt=jbt, custom=custom)
         mean_sys_delay, overhead = dispatcher.execute_simulation()
         output.append((i, mean_sys_delay))
         overheads.append((i, overhead))

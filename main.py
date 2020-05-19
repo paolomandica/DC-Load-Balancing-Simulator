@@ -90,7 +90,7 @@ if __name__ == "__main__":
         mean_system_times_cst, overheads_cst = simulator.multiprocessing_simulation(
             rho_values, n_proc, custom=True)
 
-        filename = 'weibull_test_'
+        filename = 'weibull_test2_'
 
     end = time()
     print("Simulation completed in", int(end-start), "seconds!\n\n")
@@ -99,7 +99,8 @@ if __name__ == "__main__":
         "Rho": rho_values,
         "Pod": mean_system_times_pod,
         "JSQ": mean_system_times_jsq,
-        "JBT-d": mean_system_times_jbt
+        "JBT-d": mean_system_times_jbt,
+        "CST": mean_system_times_cst
     }
     df = pd.DataFrame.from_dict(data)
     ylabel = "Mean System Time"
