@@ -6,7 +6,7 @@ from time import time
 from simulation_utils import Simulator, plot
 
 
-number_of_tasks = (10**5)
+number_of_tasks = (10**4)
 number_of_servers = 20
 d = 3
 rho_values = np.arange(0.8, 1., 0.01)
@@ -86,21 +86,27 @@ if __name__ == "__main__":
             rho_values, n_proc, jbt=True)
 
         # Custom simulation
-        simulator = Simulator(number_of_tasks, number_of_servers, d)
-        mean_system_times_cst, overheads_cst = simulator.multiprocessing_simulation(
-            rho_values, n_proc, custom=True)
+        # simulator = Simulator(number_of_tasks, number_of_servers, d)
+        # mean_system_times_cst, overheads_cst = simulator.multiprocessing_simulation(
+        #     rho_values, n_proc, custom=True)
 
-        filename = 'weibull_test2_'
+        filename = 'weibull_new_'
 
     end = time()
     print("Simulation completed in", int(end-start), "seconds!\n\n")
 
+    # data = {
+    #     "Rho": rho_values,
+    #     "Pod": mean_system_times_pod,
+    #     "JSQ": mean_system_times_jsq,
+    #     "JBT-d": mean_system_times_jbt,
+    #     "CST": mean_system_times_cst
+    # }
     data = {
         "Rho": rho_values,
         "Pod": mean_system_times_pod,
         "JSQ": mean_system_times_jsq,
-        "JBT-d": mean_system_times_jbt,
-        "CST": mean_system_times_cst
+        "JBT-d": mean_system_times_jbt
     }
     df = pd.DataFrame.from_dict(data)
     ylabel = "Mean System Time"

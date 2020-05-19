@@ -2,6 +2,7 @@ import random
 import math
 import simulation_utils as su
 from numpy.random import weibull
+import matplotlib.pyplot as plt
 
 
 class Dispatcher:
@@ -12,7 +13,7 @@ class Dispatcher:
     y = 10
     t_0 = 1
     alpha = 0.5
-    t = 1000*t_0
+    t = 100*t_0
 
     def __init__(self, number_of_tasks: int,
                  number_of_servers: int,
@@ -20,7 +21,7 @@ class Dispatcher:
                  jbt=False, custom=False):
         self.number_of_tasks = number_of_tasks
         self.number_of_servers = number_of_servers
-        self.servers = {i: 0 for i in range(number_of_servers)}
+        self.servers = {i: [0] for i in range(number_of_servers)}
         self.rho = rho
         self.d = d
         self.tasks_timeline = []
@@ -31,6 +32,7 @@ class Dispatcher:
         self.overhead = 0
         self.jbt = jbt
         self.custom = custom
+        self.rs = []
 
     def get_tasks_timeline(self):
         return self.tasks_timeline
@@ -65,16 +67,29 @@ class Dispatcher:
         ids = random.sample(server_ids, n_servers)
         return ids
 
-    def pick_best_server(self, server_ids, n_servers):
+    def compute_number_active_tasks(self, time, server_id):
+        count = 0
+        tasks = self.servers[server_id]
+        for task in tasks:
+            if task > time:
+                count += 1
+            else:
+                self.servers[server_id].remove(task)
+            if len(tasks) == 0:
+                self.servers[server_id].append(0)
+        return count
+
+    def pick_best_server(self, server_ids, n_servers, time):
         servers_ids = self.pick_random_servers(server_ids, n_servers)
 
         best_server = servers_ids[0]
-        min_time = self.servers[servers_ids[0]]
+
+        min_n_tasks = self.compute_number_active_tasks(time, servers_ids[0])
 
         for id in servers_ids[1:]:
-            current_time = self.servers[id]
-            if current_time < min_time:
-                min_time = current_time
+            current_n_tasks = self.compute_number_active_tasks(time, id)
+            if current_n_tasks < min_n_tasks:
+                min_n_tasks = current_n_tasks
                 best_server = id
 
         return best_server
@@ -91,13 +106,16 @@ class Dispatcher:
             task = self.generate_task()
 
         self.process_times.append(task)
-        server_time = self.servers[server_id]
+        try:
+            server_time = self.servers[server_id][-1]
+        except:
+            server_time = 0
 
         if server_time > time:
             task_finish_time = server_time + task
         else:
             task_finish_time = time + task
-        self.servers[server_id] = task_finish_time
+        self.servers[server_id].append(task_finish_time)
 
         system_time = task_finish_time - time
         self.system_times.append(system_time)
@@ -113,16 +131,19 @@ class Dispatcher:
             # and use the server with lower threshold to assign the task
             if time > t_units:
                 server_id = self.pick_best_server(
-                    self.servers.keys(), self.d)
-                threshold = self.servers[server_id]
+                    self.servers.keys(), self.d, time)
+                threshold = max(
+                    1, self.compute_number_active_tasks(time, server_id))
                 servers_below_threshold = []
                 # search for all the servers below threshold
-                for id, queue_len in self.servers.items():
+                for id in self.servers:
+                    queue_len = self.compute_number_active_tasks(time, id)
                     if queue_len < threshold:
                         servers_below_threshold.append(id)
                 n_servers = min(self.d, len(servers_below_threshold))
                 overhead_temp += self.number_of_servers
                 t_units += self.t
+                self.rs.append(threshold)
 
             # else, choose a random server from the ones below threshold
             # or eventually from all the servers and assign the task
@@ -142,44 +163,44 @@ class Dispatcher:
                 continue
         self.overhead /= self.number_of_tasks
 
-    def rotate_servers(self, s_low, s_medium, s_high):
-        s_low_q = sum(self.servers[s] for s in s_low)/len(s_low)
-        s_med_q = sum(self.servers[s] for s in s_medium)/len(s_medium)
-        s_high_q = sum(self.servers[s] for s in s_high)/len(s_high)
-        queues = [s_low_q, s_med_q, s_high_q]
+    # def rotate_servers(self, s_low, s_medium, s_high):
+    #     s_low_q = sum(self.servers[s] for s in s_low)/len(s_low)
+    #     s_med_q = sum(self.servers[s] for s in s_medium)/len(s_medium)
+    #     s_high_q = sum(self.servers[s] for s in s_high)/len(s_high)
+    #     queues = [s_low_q, s_med_q, s_high_q]
 
-        min_q_index = queues.index(min(queues))
-        max_q_index = queues.index(max(queues))
+    #     min_q_index = queues.index(min(queues))
+    #     max_q_index = queues.index(max(queues))
 
-        return None
+    #     return None
 
-    def process_custom1(self):
-        t_units = 0
-        n_servers = self.number_of_servers//3
-        servers = list(self.servers.keys())
+    # def process_custom1(self):
+    #     t_units = 0
+    #     n_servers = self.number_of_servers//3
+    #     servers = list(self.servers.keys())
 
-        s_low = servers[:n_servers]
-        s_medium = servers[n_servers:(n_servers*2)]
-        s_high = servers[(n_servers*2):]
+    #     s_low = servers[:n_servers]
+    #     s_medium = servers[n_servers:(n_servers*2)]
+    #     s_high = servers[(n_servers*2):]
 
-        sl = (-math.exp(0.54)*(self.beta**self.alpha))**(1/self.alpha)
-        su = (-math.exp(0.85)*(self.beta**self.alpha))**(1/self.alpha)
+    #     sl = (-math.exp(0.54)*(self.beta**self.alpha))**(1/self.alpha)
+    #     su = (-math.exp(0.85)*(self.beta**self.alpha))**(1/self.alpha)
 
-        for time in self.tasks_timeline:
-            # if time > t_units:
-            #     self.rotate_servers(s_low, s_medium, s_high)
-            #     t_units += self.t
+    #     for time in self.tasks_timeline:
+    #         # if time > t_units:
+    #         #     self.rotate_servers(s_low, s_medium, s_high)
+    #         #     t_units += self.t
 
-            task = self.generate_task()
-            if task < sl:
-                server = self.pick_best_server(s_low, len(s_low))
-            elif task >= sl and task < su:
-                server = self.pick_best_server(s_medium, len(s_medium))
-            else:
-                server = self.pick_best_server(s_high, len(s_high))
-            self.assign_task(time, server, task)
+    #         task = self.generate_task()
+    #         if task < sl:
+    #             server = self.pick_best_server(s_low, len(s_low))
+    #         elif task >= sl and task < su:
+    #             server = self.pick_best_server(s_medium, len(s_medium))
+    #         else:
+    #             server = self.pick_best_server(s_high, len(s_high))
+    #         self.assign_task(time, server, task)
 
-        self.overhead = 0
+    #     self.overhead = 0
 
     def process_custom(self):
         servers = list(self.servers.keys())
@@ -233,7 +254,7 @@ class Dispatcher:
         else:
             for time in self.tasks_timeline:
                 server_id = self.pick_best_server(
-                    list(self.servers.keys()), self.d)
+                    list(self.servers.keys()), self.d, time)
                 self.assign_task(time, server_id)
             self.compute_overhead()
 
@@ -253,5 +274,9 @@ class Dispatcher:
         self.print_results(process_time_exp, mean_process_time,
                            interval_time_exp, mean_interval_time,
                            empirical_rho, mean_system_time)
+
+        if self.jbt and (self.rho > 0.989):
+            plt.plot(range(len(self.rs)), self.rs)
+            plt.show()
 
         return mean_system_time, self.overhead
