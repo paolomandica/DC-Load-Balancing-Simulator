@@ -126,24 +126,25 @@ class Dispatcher:
         servers_below_threshold = []
 
         for time in self.tasks_timeline:
-            overhead_temp = 0
             # if t units of time passed, update the threshold,
             # update the list of servers below threshold
             # and use the server with lower threshold to assign the task
             if time > t_units:
                 server_id = self.pick_best_server(
                     self.servers.keys(), self.d, time)
+                self.overhead += 2*self.d
                 threshold = max(
                     1, self.get_queue_len(server_id, time))
-                overhead_temp += self.number_of_servers
-                servers_below_threshold = []
+                self.overhead += self.number_of_servers
+                sbt_temp = []
                 # search for all the servers below threshold
                 for id in self.servers:
                     queue_len = self.get_queue_len(id, time)
                     if queue_len < threshold:
-                        servers_below_threshold.append(id)
-                n_servers = min(self.d, len(servers_below_threshold))
-                overhead_temp += self.number_of_servers
+                        sbt_temp.append(id)
+                diff = len(set(sbt_temp).difference(
+                    set(servers_below_threshold)))
+                self.overhead += diff
                 t_units += self.t
                 self.rs.append(threshold)
 
@@ -152,23 +153,18 @@ class Dispatcher:
             else:
                 if len(servers_below_threshold) > 0:
                     server_id = random.sample(servers_below_threshold, 1)[0]
-                    n_servers = min(self.d, len(servers_below_threshold))
-                    overhead_temp += 2*n_servers
+                    servers_below_threshold.remove(server_id)
                 else:
                     server_id = random.sample(list(self.servers.keys()), 1)[0]
 
             self.assign_task(time, server_id)
-            # self.overhead += overhead_temp + 1
-            try:
-                servers_below_threshold.remove(server_id)
-            except:
-                continue
 
             for id in self.servers:
                 if id not in servers_below_threshold:
                     n_tasks = self.get_queue_len(id, time)
                     if n_tasks < threshold:
                         servers_below_threshold.append(id)
+                        self.overhead += 1
 
         self.overhead /= self.number_of_tasks
 
