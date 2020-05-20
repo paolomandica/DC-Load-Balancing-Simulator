@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 class Dispatcher:
 
-    # random.seed(1234)
+    random.seed(1234)
 
     q = 3/5
     y = 10
