@@ -6,7 +6,7 @@ from time import time
 from simulation_utils import Simulator, plot
 
 
-number_of_tasks = (10**4)
+number_of_tasks = (10**5)
 number_of_servers = 20
 d = 3
 rho_values = np.arange(0.8, 1., 0.01)
@@ -120,7 +120,7 @@ if __name__ == "__main__":
             mean_system_times_jbt, overheads_jbt = simulator.multiprocessing_simulation(
                 rho_values, n_proc, jbt=True)
 
-            filename = 'single_simulation_'
+            filename = 'single_simulation_test_1_'
 
     end = time()
     print("Simulation completed in", int(end-start), "seconds!\n\n")

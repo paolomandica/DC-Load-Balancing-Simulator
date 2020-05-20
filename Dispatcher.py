@@ -123,6 +123,7 @@ class Dispatcher:
     def process_tasks_jbt(self):
         t_units = 0
         threshold = float("+inf")
+        servers_below_threshold = []
 
         for time in self.tasks_timeline:
             overhead_temp = 0
@@ -134,6 +135,7 @@ class Dispatcher:
                     self.servers.keys(), self.d, time)
                 threshold = max(
                     1, self.get_queue_len(server_id, time))
+                overhead_temp += self.number_of_servers
                 servers_below_threshold = []
                 # search for all the servers below threshold
                 for id in self.servers:
@@ -156,11 +158,18 @@ class Dispatcher:
                     server_id = random.sample(list(self.servers.keys()), 1)[0]
 
             self.assign_task(time, server_id)
-            self.overhead += overhead_temp + 1
+            # self.overhead += overhead_temp + 1
             try:
                 servers_below_threshold.remove(server_id)
             except:
                 continue
+
+            for id in self.servers:
+                if id not in servers_below_threshold:
+                    n_tasks = self.get_queue_len(id, time)
+                    if n_tasks < threshold:
+                        servers_below_threshold.append(id)
+
         self.overhead /= self.number_of_tasks
 
     # def rotate_servers(self, s_low, s_medium, s_high):
