@@ -67,7 +67,7 @@ class Dispatcher:
         ids = random.sample(server_ids, n_servers)
         return ids
 
-    def compute_number_active_tasks(self, time, server_id):
+    def get_queue_len(self, server_id, time):
         count = 0
         tasks = self.servers[server_id]
         for task in tasks:
@@ -84,10 +84,10 @@ class Dispatcher:
 
         best_server = servers_ids[0]
 
-        min_n_tasks = self.compute_number_active_tasks(time, servers_ids[0])
+        min_n_tasks = self.get_queue_len(servers_ids[0], time)
 
         for id in servers_ids[1:]:
-            current_n_tasks = self.compute_number_active_tasks(time, id)
+            current_n_tasks = self.get_queue_len(id, time)
             if current_n_tasks < min_n_tasks:
                 min_n_tasks = current_n_tasks
                 best_server = id
@@ -133,11 +133,11 @@ class Dispatcher:
                 server_id = self.pick_best_server(
                     self.servers.keys(), self.d, time)
                 threshold = max(
-                    1, self.compute_number_active_tasks(time, server_id))
+                    1, self.get_queue_len(server_id, time))
                 servers_below_threshold = []
                 # search for all the servers below threshold
                 for id in self.servers:
-                    queue_len = self.compute_number_active_tasks(time, id)
+                    queue_len = self.get_queue_len(id, time)
                     if queue_len < threshold:
                         servers_below_threshold.append(id)
                 n_servers = min(self.d, len(servers_below_threshold))
@@ -211,11 +211,11 @@ class Dispatcher:
         for time in self.tasks_timeline:
             task = self.generate_task()
             if task < sl:
-                server = self.pick_best_server(servers, self.d)
+                server = self.pick_best_server(servers, self.d, time)
             elif task >= sl and task < su:
-                server = self.pick_best_server(servers, len(servers)//2)
+                server = self.pick_best_server(servers, len(servers)//2, time)
             else:
-                server = self.pick_best_server(servers, len(servers))
+                server = self.pick_best_server(servers, len(servers), time)
             self.assign_task(time, server, task)
 
         self.overhead = 0
