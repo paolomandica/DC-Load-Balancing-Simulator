@@ -94,6 +94,20 @@ class Dispatcher:
 
         return best_server
 
+    def pick_best_server_custom(self, server_ids, n_servers, time):
+        servers_ids = self.pick_random_servers(server_ids, n_servers)
+
+        best_server = servers_ids[0]
+        min_finish_time = self.servers[best_server][-1]
+
+        for id in server_ids[1:]:
+            cur_finish_time = self.servers[id][-1]
+            if cur_finish_time < min_finish_time:
+                min_finish_time = cur_finish_time
+                best_server = id
+
+        return best_server
+
     def generate_task(self):
         r3 = random.uniform(0, 1)
         # sostituire con exp x
@@ -216,14 +230,21 @@ class Dispatcher:
         for time in self.tasks_timeline:
             task = self.generate_task()
             if task < sl:
-                server = self.pick_best_server(servers, self.d, time)
+                server = self.pick_best_server_custom(servers, self.d, time)
+                self.overhead += self.d*2
             elif task >= sl and task < su:
-                server = self.pick_best_server(servers, len(servers)//2, time)
+                n_servers = len(servers)//2
+                server = self.pick_best_server_custom(servers, n_servers, time)
+                self.overhead += n_servers
             else:
-                server = self.pick_best_server(servers, len(servers), time)
+                n_servers = len(servers)
+                server = self.pick_best_server_custom(
+                    servers, len(servers), time)
+                self.overhead += n_servers
+
             self.assign_task(time, server, task)
 
-        self.overhead = 0
+        self.overhead /= self.number_of_tasks
 
     def compute_overhead(self):
         self.overhead = 2*self.d

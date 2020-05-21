@@ -10,10 +10,10 @@ number_of_tasks = (10**5)
 number_of_servers = 20
 d = 3
 rho_values = np.arange(0.8, 1., 0.01)
-multiple_sim = True
+multiple_sim = False
 n_sim = 20
 n_proc = mp.cpu_count()
-custom = False
+custom = True
 
 
 def perform_multiple_simulations(simulator, jbt=False, custom=False):
@@ -63,7 +63,7 @@ if __name__ == "__main__":
 
             ci = [confidence_intervals_jsq,
                   confidence_intervals_cst]
-            filename = 'multiple_simulations_custom_'
+            filename = 'custom_multiple_simulations_'
 
         else:
             # Pod-d simulation
@@ -101,7 +101,7 @@ if __name__ == "__main__":
             mean_system_times_cst, overheads_cst = simulator.multiprocessing_simulation(
                 rho_values, n_proc, custom=True)
 
-            filename = 'single_simulation_custom_'
+            filename = 'custom_single_simulation_'
 
         else:
             # Pod-d simulation
@@ -149,7 +149,8 @@ if __name__ == "__main__":
     if custom:
         data = {
             "Rho": rho_values,
-            "JSQ": overheads_jsq
+            "JSQ": overheads_jsq,
+            "CST": overheads_cst
         }
     else:
         data = {
@@ -162,6 +163,9 @@ if __name__ == "__main__":
     df = pd.DataFrame.from_dict(data)
     ylabel = "System Message Overhead"
     df = df.melt('Rho', var_name='Policy',  value_name=ylabel)
-    path = './plots/overhead.png'
+    if custom:
+        path = './plots/custom_overhead.png'
+    else:
+        path = './plots/overhead.png'
     plot(df, d, "Message Overhead Variation",
          "Utilization Coefficient (Rho)", ylabel, path)
