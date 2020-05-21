@@ -280,8 +280,8 @@ class Dispatcher:
                            interval_time_exp, mean_interval_time,
                            empirical_rho, mean_system_time)
 
-        if self.jbt and (self.rho > 0.989):
-            plt.plot(range(len(self.rs)), self.rs)
-            plt.show()
+        # if self.jbt and (self.rho > 0.989):
+        #     plt.plot(range(len(self.rs)), self.rs)
+        #     plt.show()
 
         return mean_system_time, self.overhead
