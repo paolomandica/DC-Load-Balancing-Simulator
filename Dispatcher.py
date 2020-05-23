@@ -7,8 +7,6 @@ import matplotlib.pyplot as plt
 
 class Dispatcher:
 
-    random.seed(1234)
-
     q = 3/5
     y = 10
     t_0 = 1
@@ -49,9 +47,9 @@ class Dispatcher:
         beta = rho*self.number_of_servers*exp_t/den
         return beta
 
-    def generate_tasks_timeline(self, number_of_tasks: int):
+    def generate_tasks_timeline(self):
         prev = 0
-        for _ in range(number_of_tasks):
+        for _ in range(self.number_of_tasks):
             r1 = random.uniform(0, 1)
             if r1 <= self.q:
                 self.interval_times.append(self.t_0)
@@ -62,6 +60,17 @@ class Dispatcher:
                 self.interval_times.append(task)
                 prev += task
             self.tasks_timeline.append(round(prev))
+
+    def generate_task(self):
+        r3 = random.uniform(0, 1)
+        task = max(1, min(100*self.beta*2,
+                          round(self.beta*(-math.log(r3))**(1/self.alpha))))
+        return task
+
+    def generate_tasks(self):
+        for _ in range(self.number_of_tasks):
+            task = self.generate_task()
+            self.process_times.append(task)
 
     def pick_random_servers(self, server_ids, n_servers):
         ids = random.sample(server_ids, n_servers)
@@ -108,15 +117,7 @@ class Dispatcher:
 
         return best_server
 
-    def generate_task(self):
-        r3 = random.uniform(0, 1)
-        task = max(1, min(100*self.beta*2,
-                          round(self.beta*(-math.log(r3))**(1/self.alpha))))
-        return task
-
-    def assign_task(self, time, server_id, task=None):
-        if task == None:
-            task = self.generate_task()
+    def assign_task(self, task, time, server_id):
 
         self.process_times.append(task)
         try:
@@ -138,7 +139,9 @@ class Dispatcher:
         threshold = float("+inf")
         servers_below_threshold = []
 
-        for time in self.tasks_timeline:
+        for i in range(self.number_of_tasks):
+            time = self.tasks_timeline[i]
+            task = self.process_times[i]
             # if t units of time passed, update the threshold,
             # update the list of servers below threshold
             # and use the server with lower threshold to assign the task
@@ -170,7 +173,7 @@ class Dispatcher:
                 else:
                     server_id = random.sample(list(self.servers.keys()), 1)[0]
 
-            self.assign_task(time, server_id)
+            self.assign_task(task, time, server_id)
 
             for id in self.servers:
                 if id not in servers_below_threshold:
@@ -187,10 +190,11 @@ class Dispatcher:
         sl = (-math.exp(0.2)*(self.beta**self.alpha))**(1/self.alpha)
         sm1 = (-math.exp(0.4)*(self.beta**self.alpha))**(1/self.alpha)
         sm2 = (-math.exp(0.6)*(self.beta**self.alpha))**(1/self.alpha)
-        su = (-math.exp(0.8)*(self.beta**self.alpha))**(1/self.alpha)
+        # su = (-math.exp(0.8)*(self.beta**self.alpha))**(1/self.alpha)
 
-        for time in self.tasks_timeline:
-            task = self.generate_task()
+        for i in range(self.number_of_tasks):
+            time = self.tasks_timeline[i]
+            task = self.process_times[i]
             if task < sl:
                 n_servers = len(servers)//4
                 server = self.pick_best_server_custom(servers, n_servers, time)
@@ -206,7 +210,7 @@ class Dispatcher:
                     servers, len(servers), time)
 
             self.overhead += n_servers*2
-            self.assign_task(time, server, task)
+            self.assign_task(task, time, server)
 
         self.overhead /= self.number_of_tasks
 
@@ -233,7 +237,9 @@ class Dispatcher:
         print("Starting simulation for rho = " + str(self.rho))
         print()
 
-        self.generate_tasks_timeline(self.number_of_tasks)
+        random.seed(1)
+        self.generate_tasks_timeline()
+        self.generate_tasks()
 
         if self.jbt:
             self.process_tasks_jbt()
@@ -242,10 +248,12 @@ class Dispatcher:
             self.process_custom()
 
         else:
-            for time in self.tasks_timeline:
+            for i in range(self.number_of_tasks):
+                time = self.tasks_timeline[i]
+                task = self.process_times[i]
                 server_id = self.pick_best_server(
                     list(self.servers.keys()), self.d, time)
-                self.assign_task(time, server_id)
+                self.assign_task(task, time, server_id)
             self.compute_overhead()
 
         to_remove = int(self.number_of_tasks*0.1)

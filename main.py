@@ -13,7 +13,7 @@ rho_values = np.arange(0.8, 1., 0.01)
 multiple_sim = True
 n_sim = 20
 n_proc = mp.cpu_count()
-custom = True
+custom = False
 
 
 def perform_multiple_simulations(simulator, jbt=False, custom=False):
