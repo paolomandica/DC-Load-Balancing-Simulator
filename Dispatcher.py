@@ -110,7 +110,6 @@ class Dispatcher:
 
     def generate_task(self):
         r3 = random.uniform(0, 1)
-        # sostituire con exp x
         task = max(1, min(100*self.beta*2,
                           round(self.beta*(-math.log(r3))**(1/self.alpha))))
         return task
@@ -182,66 +181,31 @@ class Dispatcher:
 
         self.overhead /= self.number_of_tasks
 
-    # def rotate_servers(self, s_low, s_medium, s_high):
-    #     s_low_q = sum(self.servers[s] for s in s_low)/len(s_low)
-    #     s_med_q = sum(self.servers[s] for s in s_medium)/len(s_medium)
-    #     s_high_q = sum(self.servers[s] for s in s_high)/len(s_high)
-    #     queues = [s_low_q, s_med_q, s_high_q]
-
-    #     min_q_index = queues.index(min(queues))
-    #     max_q_index = queues.index(max(queues))
-
-    #     return None
-
-    # def process_custom1(self):
-    #     t_units = 0
-    #     n_servers = self.number_of_servers//3
-    #     servers = list(self.servers.keys())
-
-    #     s_low = servers[:n_servers]
-    #     s_medium = servers[n_servers:(n_servers*2)]
-    #     s_high = servers[(n_servers*2):]
-
-    #     sl = (-math.exp(0.54)*(self.beta**self.alpha))**(1/self.alpha)
-    #     su = (-math.exp(0.85)*(self.beta**self.alpha))**(1/self.alpha)
-
-    #     for time in self.tasks_timeline:
-    #         # if time > t_units:
-    #         #     self.rotate_servers(s_low, s_medium, s_high)
-    #         #     t_units += self.t
-
-    #         task = self.generate_task()
-    #         if task < sl:
-    #             server = self.pick_best_server(s_low, len(s_low))
-    #         elif task >= sl and task < su:
-    #             server = self.pick_best_server(s_medium, len(s_medium))
-    #         else:
-    #             server = self.pick_best_server(s_high, len(s_high))
-    #         self.assign_task(time, server, task)
-
-    #     self.overhead = 0
-
     def process_custom(self):
         servers = list(self.servers.keys())
 
-        sl = (-math.exp(0.54)*(self.beta**self.alpha))**(1/self.alpha)
-        su = (-math.exp(0.85)*(self.beta**self.alpha))**(1/self.alpha)
+        sl = (-math.exp(0.2)*(self.beta**self.alpha))**(1/self.alpha)
+        sm1 = (-math.exp(0.4)*(self.beta**self.alpha))**(1/self.alpha)
+        sm2 = (-math.exp(0.5)*(self.beta**self.alpha))**(1/self.alpha)
+        su = (-math.exp(0.7)*(self.beta**self.alpha))**(1/self.alpha)
 
         for time in self.tasks_timeline:
             task = self.generate_task()
             if task < sl:
-                server = self.pick_best_server_custom(servers, self.d, time)
-                self.overhead += self.d*2
-            elif task >= sl and task < su:
+                n_servers = len(servers)//4
+                server = self.pick_best_server_custom(servers, n_servers, time)
+            elif task >= sl and task < sm1:
                 n_servers = len(servers)//2
                 server = self.pick_best_server_custom(servers, n_servers, time)
-                self.overhead += n_servers
+            elif task >= sm1 and task < sm2:
+                n_servers = int(len(servers)/1.3)
+                server = self.pick_best_server_custom(servers, n_servers, time)
             else:
                 n_servers = len(servers)
                 server = self.pick_best_server_custom(
                     servers, len(servers), time)
-                self.overhead += n_servers
 
+            self.overhead += n_servers*2
             self.assign_task(time, server, task)
 
         self.overhead /= self.number_of_tasks
@@ -304,5 +268,6 @@ class Dispatcher:
         # if self.jbt and (self.rho > 0.989):
         #     plt.plot(range(len(self.rs)), self.rs)
         #     plt.show()
+        print("PROCESS TIMES = ", self.process_times)
 
         return mean_system_time, self.overhead
