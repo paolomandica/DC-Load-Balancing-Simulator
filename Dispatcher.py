@@ -186,8 +186,8 @@ class Dispatcher:
 
         sl = (-math.exp(0.2)*(self.beta**self.alpha))**(1/self.alpha)
         sm1 = (-math.exp(0.4)*(self.beta**self.alpha))**(1/self.alpha)
-        sm2 = (-math.exp(0.5)*(self.beta**self.alpha))**(1/self.alpha)
-        su = (-math.exp(0.7)*(self.beta**self.alpha))**(1/self.alpha)
+        sm2 = (-math.exp(0.6)*(self.beta**self.alpha))**(1/self.alpha)
+        su = (-math.exp(0.8)*(self.beta**self.alpha))**(1/self.alpha)
 
         for time in self.tasks_timeline:
             task = self.generate_task()
@@ -268,6 +268,6 @@ class Dispatcher:
         # if self.jbt and (self.rho > 0.989):
         #     plt.plot(range(len(self.rs)), self.rs)
         #     plt.show()
-        print("PROCESS TIMES = ", self.process_times)
+        # print("PROCESS TIMES = ", self.process_times)
 
         return mean_system_time, self.overhead
