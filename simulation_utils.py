@@ -28,7 +28,9 @@ def plot(df, d, title, xlabel, ylabel, path, confidence_intervals=None):
     plt.title(title, fontsize=20)
     plt.xlabel(xlabel, fontsize=15)
     plt.ylabel(ylabel, fontsize=15)
-    plt.savefig(path)
+    if confidence_intervals != None:
+        plt.legend(loc='upper left')
+    # plt.savefig(path)
     plt.show()
 
 
@@ -39,15 +41,16 @@ class Simulator:
         self.number_of_tasks = number_of_tasks
         self.d = d
 
-    def simulate_partial(self, rho, i, output: list, overheads: list, jbt, custom):
+    def simulate_partial(self, rho, i, output: list, overheads: list, jbt, custom, seed):
         dispatcher = Dispatcher(self.number_of_tasks,
                                 self.number_of_servers,
-                                rho, self.d, jbt=jbt, custom=custom)
+                                rho, self.d, seed,
+                                jbt=jbt, custom=custom)
         mean_sys_delay, overhead = dispatcher.execute_simulation()
         output.append((i, mean_sys_delay))
         overheads.append((i, overhead))
 
-    def multiprocessing_simulation(self, rho_values, n_proc, jbt=False, custom=False):
+    def multiprocessing_simulation(self, rho_values, n_proc, jbt=False, custom=False, seed=1):
         processes = []
         # initialize the Manager for results and shared variables
         manager = mp.Manager()
@@ -57,7 +60,7 @@ class Simulator:
         # initialize processes
         for i in range(len(rho_values)):
             p = mp.Process(target=self.simulate_partial,
-                           args=[rho_values[i], i, output, overheads, jbt, custom])
+                           args=[rho_values[i], i, output, overheads, jbt, custom, seed])
             processes.append(p)
 
         # start processes

@@ -10,7 +10,7 @@ number_of_tasks = (10**5)
 number_of_servers = 20
 d = 3
 rho_values = np.arange(0.8, 1., 0.01)
-multiple_sim = True
+multiple_sim = False
 n_sim = 20
 n_proc = mp.cpu_count()
 custom = False
@@ -23,9 +23,9 @@ def perform_multiple_simulations(simulator, jbt=False, custom=False):
     lowers = []
     uppers = []
 
-    for _ in range(n_sim):
+    for i in range(n_sim):
         mean_system_times_partial, overheads = simulator.multiprocessing_simulation(
-            rho_values, n_proc, jbt, custom)
+            rho_values, n_proc, jbt, custom, seed=i)
         mean_system_times_lists.append(mean_system_times_partial)
 
     for l in zip(*mean_system_times_lists):

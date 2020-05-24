@@ -15,7 +15,7 @@ class Dispatcher:
 
     def __init__(self, number_of_tasks: int,
                  number_of_servers: int,
-                 rho: float, d: int,
+                 rho: float, d: int, seed=1,
                  jbt=False, custom=False):
         self.number_of_tasks = number_of_tasks
         self.number_of_servers = number_of_servers
@@ -31,6 +31,7 @@ class Dispatcher:
         self.jbt = jbt
         self.custom = custom
         self.rs = []
+        self.seed = seed
 
     def get_tasks_timeline(self):
         return self.tasks_timeline
@@ -237,7 +238,7 @@ class Dispatcher:
         print("Starting simulation for rho = " + str(self.rho))
         print()
 
-        random.seed(1)
+        random.seed(self.seed)
         self.generate_tasks_timeline()
         self.generate_tasks()
 
