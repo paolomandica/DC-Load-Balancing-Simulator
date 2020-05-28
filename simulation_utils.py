@@ -25,12 +25,13 @@ def plot(df, d, title, xlabel, ylabel, path, confidence_intervals=None):
             rho = df['Rho'].unique()
             plt.fill_between(rho, lower, upper, alpha=0.3)
 
-    plt.title(title, fontsize=20)
-    plt.xlabel(xlabel, fontsize=15)
-    plt.ylabel(ylabel, fontsize=15)
+    plt.title(title, fontsize=24)
+    plt.xlabel(xlabel, fontsize=18)
+    plt.ylabel(ylabel, fontsize=18)
     if confidence_intervals != None:
         plt.legend(loc='upper left')
-    # plt.savefig(path)
+    plt.legend(fontsize='x-large')
+    plt.savefig(path)
     plt.show()
 
 
