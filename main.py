@@ -1,87 +1,171 @@
-from Dispatcher import Dispatcher
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import multiprocessing as mp
 from time import time
+from simulation_utils import Simulator, plot
 
 
-number_of_tasks = (10**6)
-number_of_servers = 100
+number_of_tasks = (10**5)
+number_of_servers = 20
 d = 3
 rho_values = np.arange(0.8, 1., 0.01)
+multiple_sim = False
+n_sim = 20
+n_proc = mp.cpu_count()
+custom = False
 
 
-def simulate(rho):
-    dispatcher = Dispatcher(number_of_tasks,
-                            number_of_servers,
-                            rho, d)
-    mean_sys_delay = dispatcher.execute_simulation()
-    return mean_sys_delay
+def perform_multiple_simulations(simulator, jbt=False, custom=False):
+    mean_system_times_lists = []
+    mean_system_times = []
+    z = 1.96
+    lowers = []
+    uppers = []
 
+    for i in range(n_sim):
+        mean_system_times_partial, overheads = simulator.multiprocessing_simulation(
+            rho_values, n_proc, jbt, custom, seed=i)
+        mean_system_times_lists.append(mean_system_times_partial)
 
-def simulate_partial(rho, i, output: list):
-    dispatcher = Dispatcher(number_of_tasks,
-                            number_of_servers,
-                            rho, d)
-    mean_sys_delay = dispatcher.execute_simulation()
+    for l in zip(*mean_system_times_lists):
+        mean, sigma = np.mean(l), np.std(l)
+        mean_system_times.append(np.mean(l))
+        lowers.append(mean - (z*sigma/np.sqrt(len(l))))
+        uppers.append(mean + (z*sigma/np.sqrt(len(l))))
+        confidence_intervals = (lowers, uppers)
 
-    output.append((i, mean_sys_delay))
-
-
-def multiprocessing_simulation(rho_values, n_proc):
-    processes = []
-    # initialize the Manager for results and shared variables
-    manager = mp.Manager()
-    output = manager.list()
-
-    # initialize processes
-    for i in range(len(rho_values)):
-        p = mp.Process(target=simulate_partial,
-                       args=[rho_values[i], i, output])
-        processes.append(p)
-
-    # start processes
-    for p in processes:
-        p.start()
-
-    # wait for each process to terminate
-    for p in processes:
-        p.join()
-
-    output.sort()
-    results = [r[1] for r in output]
-    return results
+    return mean_system_times, confidence_intervals, overheads
 
 
 if __name__ == "__main__":
 
     mean_system_times = []
     mean_system_delays = []
+    ci = None
 
     print("\nStarting simulation process...")
     start = time()
 
-    n_proc = mp.cpu_count()//2
-    # n_proc = 1
-    mean_system_delays = multiprocessing_simulation(rho_values, n_proc)
+    if multiple_sim:
 
-    # for rho in rho_values:
-    #     mean_system_delays.append(simulate(rho))
+        if custom:
+            # JSQ simulation
+            simulator = Simulator(
+                number_of_tasks, number_of_servers, number_of_servers)
+            mean_system_times_jsq, confidence_intervals_jsq, overheads_jsq = perform_multiple_simulations(
+                simulator)
 
-    print(mean_system_delays)
+            # Custom simulation
+            simulator = Simulator(number_of_tasks, number_of_servers, d)
+            mean_system_times_cst, confidence_intervals_cst, overheads_cst = perform_multiple_simulations(
+                simulator, custom=True)
+
+            ci = [confidence_intervals_jsq,
+                  confidence_intervals_cst]
+            filename = 'custom_multiple_simulations_'
+
+        else:
+            # Pod-d simulation
+            simulator = Simulator(number_of_tasks, number_of_servers, d)
+            mean_system_times_pod, confidence_intervals_pod, overheads_pod = perform_multiple_simulations(
+                simulator)
+
+            # JSQ simulation
+            simulator = Simulator(
+                number_of_tasks, number_of_servers, number_of_servers)
+            mean_system_times_jsq, confidence_intervals_jsq, overheads_jsq = perform_multiple_simulations(
+                simulator)
+
+            # JBT-d simulation
+            simulator = Simulator(number_of_tasks, number_of_servers, d)
+            mean_system_times_jbt, confidence_intervals_jbt, overheads_jbt = perform_multiple_simulations(
+                simulator, jbt=True)
+
+            ci = [confidence_intervals_pod,
+                  confidence_intervals_jsq,
+                  confidence_intervals_jbt]
+            filename = 'multiple_simulations_'
+
+    else:
+
+        if custom:
+            # JSQ simulation
+            simulator = Simulator(
+                number_of_tasks, number_of_servers, number_of_servers)
+            mean_system_times_jsq, overheads_jsq = simulator.multiprocessing_simulation(
+                rho_values, n_proc)
+
+            # Custom simulation
+            simulator = Simulator(number_of_tasks, number_of_servers, d)
+            mean_system_times_cst, overheads_cst = simulator.multiprocessing_simulation(
+                rho_values, n_proc, custom=True)
+
+            filename = 'custom_single_simulation_'
+
+        else:
+            # Pod-d simulation
+            simulator = Simulator(number_of_tasks, number_of_servers, d)
+            mean_system_times_pod, overheads_pod = simulator.multiprocessing_simulation(
+                rho_values, n_proc)
+
+            # JSQ simulation
+            simulator = Simulator(
+                number_of_tasks, number_of_servers, number_of_servers)
+            mean_system_times_jsq, overheads_jsq = simulator.multiprocessing_simulation(
+                rho_values, n_proc)
+
+            # JBT-d simulation
+            simulator = Simulator(number_of_tasks, number_of_servers, d)
+            mean_system_times_jbt, overheads_jbt = simulator.multiprocessing_simulation(
+                rho_values, n_proc, jbt=True)
+
+            filename = 'single_simulation_'
 
     end = time()
-    print("\nSimulation completed in", int(end-start), "seconds!\n")
+    print("Simulation completed in", int(end-start), "seconds!\n\n")
 
-    xi = list(range(len(rho_values)))
-    plt.plot(rho_values, mean_system_delays)
-    plt.scatter(rho_values, mean_system_delays, c='r')
-    # ticks = [rho_values[i]
-    #          for i in range(0, len(rho_values)-2, 2)] + [rho_values[-2]]
-    plt.xticks(rho_values)
-    plt.title("Mean System Delay Variation")
-    plt.xlabel("Utilization Coefficient (Rho)")
-    plt.ylabel("Mean System Delay")
-    path = './plots/pareto_' + str(number_of_tasks) + '.png'
-    plt.savefig(path)
-    plt.show()
+    if custom:
+        data = {
+            "Rho": rho_values,
+            "JSQ": mean_system_times_jsq,
+            "CST": mean_system_times_cst
+        }
+    else:
+        data = {
+            "Rho": rho_values,
+            "Pod": mean_system_times_pod,
+            "JSQ": mean_system_times_jsq,
+            "JBT-d": mean_system_times_jbt
+        }
+
+    df = pd.DataFrame.from_dict(data)
+    ylabel = "Mean System Time"
+    df = df.melt('Rho', var_name='Policy',  value_name=ylabel)
+    path = './plots/' + filename + str(number_of_tasks) + '.png'
+    plot(df, d, "Mean System Time Variation",
+         "Utilization Coefficient (Rho)", ylabel, path, ci)
+
+    if custom:
+        data = {
+            "Rho": rho_values,
+            "JSQ": overheads_jsq,
+            "CST": overheads_cst
+        }
+    else:
+        data = {
+            "Rho": rho_values,
+            "Pod": overheads_pod,
+            "JSQ": overheads_jsq,
+            "JBT-d": overheads_jbt
+        }
+
+    df = pd.DataFrame.from_dict(data)
+    ylabel = "System Message Overhead"
+    df = df.melt('Rho', var_name='Policy',  value_name=ylabel)
+    if custom:
+        path = './plots/custom_overhead.png'
+    else:
+        path = './plots/overhead.png'
+    plot(df, d, "Message Overhead Variation",
+         "Utilization Coefficient (Rho)", ylabel, path)
